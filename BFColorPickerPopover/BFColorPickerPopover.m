@@ -64,7 +64,14 @@
 	if (_observingColor) {
 		[self.colorPanel addObserver:self forKeyPath:@"color" options:NSKeyValueObservingOptionNew context:context];
 	} else {
-		[self.colorPanel removeObserver:self forKeyPath:@"color" context:context];
+		@try
+		{
+			[self.colorPanel removeObserver:self forKeyPath:@"color" context:context];
+		} @catch (NSException *exception) {
+			// there could be an exception reading:
+			// "Cannot remove an observer <BFColorPickerPopover 0x600000879ea0> for the key path "color" from <NSColorPanel 0x12d7eef70> because it is not registered as an observer."
+			NSLog(@"NSException ignored: %@", exception);
+		}
 	}
 }
 
@@ -145,6 +152,7 @@
 
 - (void)deactivateColorWell {
 	[self.colorWell deactivate];
+//	[self close]; <<<<<<< NO NO -> hang on main thread
 	self.colorWell = nil;
 }
 

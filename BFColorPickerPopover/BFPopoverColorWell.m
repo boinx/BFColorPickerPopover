@@ -88,34 +88,56 @@
 }
 
 - (void)activate:(BOOL)exclusive {
-	if (self.isActive) return;
 	
-	if (self.useColorPanelIfAvailable && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
+	if (@available(macOS 13.0, *))
+	{
 		[super activate:exclusive];
-		self.isActive = YES;
-	} else {
-		[self activateWithPopover];
+	}
+	else
+	{
+		if (self.isActive) return;
+		
+		if (self.useColorPanelIfAvailable && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
+			[super activate:exclusive];
+			self.isActive = YES;
+		} else {
+			[self activateWithPopover];
+		}
 	}
 }
 
 - (void)deactivate {
-	if (!self.isActive) return;
-	[super deactivate];
-	self.popover.colorWell = nil;
-    self.popover.delegate = nil;
-	self.popover = nil;
-	self.isActive = NO;
+	if (@available(macOS 13.0, *))
+	{
+		[super deactivate];
+	}
+	else
+	{
+		if (!self.isActive) return;
+		[super deactivate];
+		self.popover.colorWell = nil;
+		[self.popover close];
+		self.popover.delegate = nil;
+		self.popover = nil;
+		self.isActive = NO;
+	}
 }
 
 // Force using a popover (even if useColorPanelIfAvailable = YES), when the user double clicks the well.
 - (void)mouseDown:(NSEvent *)theEvent {
-	if([theEvent clickCount] == 2 && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
-		[self deactivate];
-		[self activateWithPopover];
-	} else {
+	if (@available(macOS 13.0, *))
+	{
 		[super mouseDown:theEvent];
 	}
-	
+	else
+	{
+		if([theEvent clickCount] == 2 && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
+			[self deactivate];
+			[self activateWithPopover];
+		} else {
+			[super mouseDown:theEvent];
+		}
+	}
 }
 
 - (void)popoverDidClose:(NSNotification *)notification
